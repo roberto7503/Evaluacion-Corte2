@@ -1,16 +1,16 @@
 # Gestión de Productos — Evaluación Corte 2
 
-Aplicación de escritorio para administrar el catálogo de productos de una papelería, desarrollada con **JavaFX** y **PostgreSQL**.
+Aplicación de escritorio para administrar el catálogo de productos de una papelería, desarrollada con **Java 21, JavaFX y PostgreSQL**.
 
-Permite registrar, consultar, actualizar y eliminar productos mediante una interfaz gráfica, con validaciones de datos y almacenamiento en una base de datos relacional.
+Permite registrar, consultar, actualizar y eliminar productos mediante una interfaz gráfica, con validaciones de datos y almacenamiento persistente.
 
 ## Funcionalidades
 
 - Registro de productos con código, nombre, categoría, precio y stock.
-- Consulta de productos en una tabla con contador de registros visibles.
+- Visualización de productos en una tabla con contador de registros.
 - Búsqueda por coincidencias parciales en código o nombre, sin distinguir mayúsculas y minúsculas.
 - Filtro por categoría: **Papelería**, **Tecnología** y **Accesorios**.
-- Filtro para mostrar únicamente productos con stock disponible.
+- Filtro **Solo con existencias**.
 - Combinación de búsqueda y filtros.
 - Actualización de productos seleccionados.
 - Eliminación con confirmación previa.
@@ -25,40 +25,44 @@ Permite registrar, consultar, actualizar y eliminar productos mediante una inter
 | JavaFX 21.0.6 | Interfaz gráfica |
 | FXML | Definición de la vista |
 | PostgreSQL | Base de datos |
-| JDBC | Conexión y operaciones SQL |
+| PostgreSQL JDBC 42.7.13 | Conexión con la base de datos |
 | Maven | Gestión de dependencias y compilación |
 
 ## Estructura del repositorio
 
 ```text
 Evaluacion-Corte2/
-├── Evaluacion-Corte2/
-│   ├── pom.xml
-│   ├── mvnw
-│   ├── mvnw.cmd
-│   └── src/main/
-│       ├── java/
-│       │   ├── module-info.java
-│       │   └── org/example/evaluacioncorte2/
-│       │       ├── ProductoApplication.java
-│       │       ├── connection/ConexionBD.java
-│       │       ├── controller/ProductoController.java
-│       │       ├── DAO/ProductoDAO.java
-│       │       └── model/Producto.java
-│       └── resources/org/example/evaluacioncorte2/
-│           └── Producto-view.fxml
-├── Evidencias Evaluacion Corte 2/
+├── .gitignore
+├── README.md
 ├── script_papeleria.sql
-└── README.md
+├── Evidencias Evaluacion Corte 2/
+└── Evaluacion-Corte2/
+    ├── pom.xml
+    ├── mvnw
+    ├── mvnw.cmd
+    └── src/main/
+        ├── java/
+        │   ├── module-info.java
+        │   └── org/example/evaluacioncorte2/
+        │       ├── ProductoApplication.java
+        │       ├── connection/ConexionBD.java
+        │       ├── controller/ProductoController.java
+        │       ├── DAO/ProductoDAO.java
+        │       └── model/Producto.java
+        └── resources/org/example/evaluacioncorte2/
+            ├── Producto-view.fxml
+            └── database.properties.example
 ```
 
-El proyecto separa sus responsabilidades en:
+El archivo `database.properties` se crea localmente a partir de la plantilla y queda excluido de Git.
 
-- **Modelo:** representa los datos del producto.
-- **Vista:** define la interfaz mediante FXML.
+## Organización del código
+
+- **Modelo:** representa los datos de un producto.
+- **Vista:** define la interfaz gráfica mediante FXML.
 - **Controlador:** gestiona las acciones del usuario y valida los datos.
-- **DAO:** ejecuta las consultas y operaciones sobre PostgreSQL.
-- **Conexión:** centraliza el acceso a la base de datos.
+- **DAO:** realiza las consultas y operaciones SQL mediante sentencias preparadas.
+- **Conexión:** carga la configuración local y establece la conexión con PostgreSQL.
 
 ## Requisitos
 
@@ -66,9 +70,9 @@ El proyecto separa sus responsabilidades en:
 - Maven instalado y disponible en la terminal.
 - PostgreSQL instalado y en ejecución.
 - Git para clonar el repositorio.
-- pgAdmin o un cliente SQL para preparar la base de datos.
+- pgAdmin u otro cliente SQL para preparar la base de datos.
 
-## Instalación y configuración
+## Instalación y ejecución
 
 ### 1. Clonar el repositorio
 
@@ -81,74 +85,75 @@ cd Evaluacion-Corte2
 
 El archivo `script_papeleria.sql` contiene la creación de la base de datos, el esquema, la tabla y 12 productos de prueba.
 
-Para ejecutarlo desde pgAdmin:
+Desde pgAdmin u otro cliente SQL:
 
 1. Conectarse al servidor PostgreSQL.
-2. Ejecutar únicamente esta instrucción, fuera de una transacción:
+2. Ejecutar esta instrucción fuera de una transacción:
 
    ```sql
    CREATE DATABASE papeleria_campus;
    ```
 
 3. Abrir una nueva consulta conectada a `papeleria_campus`.
-4. Ejecutar el resto del archivo, desde `CREATE SCHEMA` hasta la inserción de los productos.
+4. Ejecutar el resto del archivo `script_papeleria.sql`, desde `CREATE SCHEMA` hasta la inserción de los productos.
 
-> **Atención:** el script incluye `TRUNCATE TABLE registros.producto RESTART IDENTITY`, que elimina los productos existentes y reinicia sus identificadores antes de cargar los datos de prueba.
+Si la base de datos ya existe, omitir su creación.
 
-### 3. Configurar la conexión
+### 3. Configurar la conexión local
 
-Editar el archivo:
+Abrir la carpeta:
 
 ```text
-Evaluacion-Corte2/src/main/java/org/example/evaluacioncorte2/connection/ConexionBD.java
+Evaluacion-Corte2/src/main/resources/org/example/evaluacioncorte2/
 ```
 
-Ajustar los valores según la instalación local:
+Copiar `database.properties.example` y nombrar la copia:
 
-```java
-private static final String URL =
-        "jdbc:postgresql://localhost:5432/papeleria_campus";
-private static final String USER = "postgres";
-private static final String PASSWORD = "TU_CONTRASEÑA";
+```text
+database.properties
 ```
 
-### 4. Ajustar la clase de inicio
+Conservar la plantilla original y editar únicamente la copia con las credenciales propias:
 
-En `Evaluacion-Corte2/pom.xml`, dentro de la configuración de `javafx-maven-plugin`, reemplazar el contenido de `<mainClass>` por:
-
-```xml
-<mainClass>org.example.evaluacioncorte2/org.example.evaluacioncorte2.ProductoApplication</mainClass>
+```properties
+db.url=jdbc:postgresql://localhost:5432/papeleria_campus?currentSchema=registros
+db.user=TU_USUARIO
+db.password=TU_CONTRASEÑA
 ```
 
-Este ajuste es necesario porque la configuración actual referencia una clase de otro proyecto.
+Si PostgreSQL utiliza otro servidor o puerto, ajustar también `db.url`.
 
-### 5. Ejecutar la aplicación
+No es necesario modificar `ConexionBD.java`. Guardar la configuración antes de compilar o iniciar la aplicación.
 
-Desde la raíz del repositorio, entrar a la carpeta que contiene `pom.xml`:
+### 4. Ejecutar la aplicación
+
+Desde la raíz del repositorio, entrar a la carpeta que contiene el `pom.xml`:
 
 ```bash
 cd Evaluacion-Corte2
 mvn clean javafx:run
 ```
 
-También se puede importar esa carpeta como proyecto Maven en un IDE, configurar el JDK 21 y ejecutar `ProductoApplication`.
+También se puede importar esa carpeta como proyecto Maven en un IDE, seleccionar JDK 21 y ejecutar la clase `ProductoApplication`.
 
 ## Uso
 
 ### Registrar un producto
 
-1. Presionar **Nuevo** para limpiar el formulario.
-2. Ingresar código, nombre, categoría, precio y stock.
+1. Presionar **Nuevo / Limpiar**.
+2. Completar código, nombre, categoría, precio y stock.
 3. Presionar **Guardar**.
 
-### Buscar productos
+El identificador se genera automáticamente.
 
-1. Escribir parte del código o nombre.
-2. Seleccionar una categoría si se desea.
-3. Activar el filtro de stock disponible si corresponde.
+### Buscar y filtrar
+
+1. Escribir parte del código o nombre, si se desea.
+2. Seleccionar una categoría o mantener **Todas**.
+3. Marcar **Solo con existencias** para consultar productos con stock mayor que cero.
 4. Presionar **Buscar**.
 
-**Limpiar filtros** restablece la consulta completa. **Recargar** actualiza la tabla conservando los filtros seleccionados.
+**Limpiar filtros** restablece la consulta completa. **Recargar** actualiza la tabla conservando los filtros actuales.
 
 ### Actualizar un producto
 
@@ -172,7 +177,7 @@ También se puede importar esa carpeta como proyecto Maven en un IDE, configurar
 | Precio | Entre `0.01` y `99999999.99`, con un máximo de 2 decimales. |
 | Stock | Número entero entre `0` y `2147483647`. |
 
-Para ingresar precios decimales, utilizar punto; por ejemplo, `72.50`.
+Los precios se muestran en **córdobas (C$)**. Para ingresar decimales, utilizar punto; por ejemplo, `72.50`.
 
 La base de datos también aplica restricciones de integridad para evitar códigos duplicados y valores fuera de los rangos permitidos.
 
@@ -187,21 +192,37 @@ La base de datos también aplica restricciones de integridad para evitar código
 | `id_producto` | INTEGER IDENTITY | Identificador generado automáticamente |
 | `codigo` | VARCHAR(10) | Código único |
 | `nombre` | VARCHAR(80) | Nombre del producto |
-| `categoria` | VARCHAR(20) | Categoría del catálogo |
+| `categoria` | VARCHAR(20) | Categoría |
 | `precio` | NUMERIC(10,2) | Precio del producto |
 | `stock` | INTEGER | Existencias disponibles |
 
+Los 12 registros iniciales incluyen productos de las tres categorías y ejemplos con stock igual a cero para comprobar los filtros.
+
+## Configuración privada
+
+El `.gitignore` de la raíz contiene:
+
+```gitignore
+**/target/
+**/database.properties
+```
+
+Cada persona debe mantener sus credenciales en su propio `database.properties`. En el repositorio se conserva únicamente `database.properties.example`, con valores de ejemplo.
+
+La carpeta `target/` se genera al compilar y queda excluida de Git.
+
 ## Evidencias
 
-Las capturas de pantalla del proyecto se encuentran en la carpeta [Evidencias Evaluacion Corte 2](./Evidencias%20Evaluacion%20Corte%202).
+Las capturas de pantalla se encuentran en la carpeta [Evidencias Evaluacion Corte 2](./Evidencias%20Evaluacion%20Corte%202).
 
 ## Solución de problemas
 
-- **Error de conexión:** verificar que PostgreSQL esté activo y que la URL, el usuario y la contraseña sean correctos.
-- **La tabla no existe:** comprobar que el esquema y la tabla se hayan creado dentro de `papeleria_campus`.
+- **Error de conexión:** verificar que PostgreSQL esté activo y revisar la URL, el usuario y la contraseña en `database.properties`.
+- **No se encuentra la configuración:** comprobar que el archivo se llame exactamente `database.properties`, esté en la misma carpeta que la plantilla y volver a compilar.
+- **La tabla no existe:** comprobar que el esquema `registros` y la tabla `producto` se hayan creado dentro de `papeleria_campus`.
 - **Código duplicado:** utilizar un código que no esté registrado.
-- **No se encuentra la clase principal:** revisar el ajuste de `<mainClass>` descrito en la instalación.
-- **Error de versión de Java:** comprobar que Maven y el IDE utilicen JDK 21.
+- **Precio inválido:** utilizar punto decimal y un máximo de dos decimales.
+- **Error de versión de Java:** comprobar con `mvn -version` que Maven esté utilizando JDK 21.
 
 ## Autor
 
